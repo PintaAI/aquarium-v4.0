@@ -1,11 +1,19 @@
 import { AuthStatus } from "@/components/auth/auth-status";
-import { ModeToggle } from "@/components/mode-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { PushNotificationManager, InstallPrompt } from "@/components/pwa/notification-manager";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      <AuthStatus />
-      <ModeToggle />
+      <div className="p-4 flex justify-between items-center">
+        <AuthStatus />
+        <ThemeToggle />
+      </div>
+
+      <div className="max-w-6xl mx-auto px-8 py-4">
+        <PushNotificationManager />
+        <InstallPrompt />
+      </div>
 
       {/* Hero Section */}
       <header className="bg-primary text-primary-foreground py-16">

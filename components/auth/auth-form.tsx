@@ -46,7 +46,7 @@ export function AuthForm() {
           return
         }
 
-        router.push("/dashboard")
+        router.push("/")
         router.refresh()
         toast.success("Logged in successfully")
       } else {
@@ -81,7 +81,7 @@ export function AuthForm() {
         toast.success(data.message)
         setMode("login")
       }
-    } catch (error) {
+    } catch {
       toast.error("Something went wrong")
     } finally {
       setLoading(false)
