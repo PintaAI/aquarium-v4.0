@@ -1,9 +1,11 @@
 import { AuthStatus } from "@/components/auth/auth-status";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <AuthStatus />
+      <ModeToggle />
 
       {/* Hero Section */}
       <header className="bg-primary text-primary-foreground py-16">
