@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { subscribeUser, unsubscribeUser, sendNotification } from '@/app/actions'
+import { subscribeUser, unsubscribeUser, sendNotification } from '@/app/actions/notification-actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useCurrentUser } from '@/hooks/use-current-user'

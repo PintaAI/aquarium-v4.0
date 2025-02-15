@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { makeUserAdmin } from '@/app/actions/admin'
+import { makeUserAdmin } from '@/app/actions/admin-actions'
 import { getDatabaseStats, type DatabaseStats } from '@/app/actions/database-stats'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

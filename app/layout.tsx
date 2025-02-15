@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   title: "Pejuangkorea Academy",
   description: "Learn Korean language and culture",
   manifest: "/manifest.json",
-  themeColor: "#000000",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
