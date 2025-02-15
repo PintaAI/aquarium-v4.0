@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { PushNotificationManager } from '@/components/pwa/notification-manager'
+import { UserTable } from '@/components/user-table'
 
 export default function AdminPage() {
   const user = useCurrentUser()
@@ -41,7 +43,7 @@ export default function AdminPage() {
     try {
       setError('')
       setMessage('')
-      
+
       const result = await makeUserAdmin(email)
       if (result.success) {
         setMessage(`Successfully made ${email} an admin`)
@@ -88,7 +90,7 @@ export default function AdminPage() {
           {message && (
             <p className="text-sm text-green-600">{message}</p>
           )}
-          
+
           {error && (
             <p className="text-sm text-red-600">{error}</p>
           )}
@@ -146,7 +148,7 @@ export default function AdminPage() {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="font-medium mb-3">By Plan</h3>
                   <div className="space-y-2">
@@ -182,6 +184,8 @@ export default function AdminPage() {
           </>
         ) : null}
       </div>
+      <PushNotificationManager />
+      <UserTable />
     </div>
   )
 }

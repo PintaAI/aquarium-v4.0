@@ -70,23 +70,34 @@ export async function unsubscribeUser() {
   }
 }
 
-export async function sendNotification(message: string) {
-  const user = await currentUser()
-  if (!user?.id) {
-    throw new Error('Authentication required')
-  }
-
+export async function sendNotification(message: string, userId?: string) {
   try {
-    // Get all subscriptions
-    const subscriptions = await prisma.pushSubscription.findMany({
-      select: {
-        endpoint: true,
-        p256dh: true,
-        auth: true,
-      },
-    })
+    let subscriptions;
 
-    // Send notification to all subscribed users
+    if (userId) {
+      // Get subscription for specific user
+      subscriptions = await prisma.pushSubscription.findMany({
+        where: {
+          userId: userId,
+        },
+        select: {
+          endpoint: true,
+          p256dh: true,
+          auth: true,
+        },
+      });
+    } else {
+      // Get all subscriptions
+      subscriptions = await prisma.pushSubscription.findMany({
+        select: {
+          endpoint: true,
+          p256dh: true,
+          auth: true,
+        },
+      });
+    }
+
+    // Send notification to subscribed users
     const results = await Promise.all(
       subscriptions.map((sub) =>
         webpush.sendNotification(
@@ -98,17 +109,17 @@ export async function sendNotification(message: string) {
             },
           },
           JSON.stringify({
-            title: 'Pejuangkorea',
+            title: 'Pemberitahuan',
             body: message,
             icon: '/manifest-icon-192.maskable.png',
           })
         )
       )
-    )
+    );
 
-    return { success: true, sent: results.length }
+    return { success: true, sent: results.length };
   } catch (error) {
-    console.error('Error sending push notification:', error)
-    return { success: false, error: 'Failed to send notification' }
+    console.error('Error sending push notification:', error);
+    return { success: false, error: 'Failed to send notification' };
   }
 }
