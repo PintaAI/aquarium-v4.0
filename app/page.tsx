@@ -1,4 +1,4 @@
-import { AuthStatus } from "@/components/auth/auth-status";
+
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PushNotificationManager, InstallPrompt } from "@/components/pwa/notification-manager";
 
@@ -6,7 +6,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <div className="p-4 flex justify-between items-center">
-        <AuthStatus />
         <ThemeToggle />
       </div>
 

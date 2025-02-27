@@ -21,24 +21,27 @@ model User {
   id                   String                 @id @default(cuid())
   email                String                 @unique
   name                 String?
-  role                 UserRoles              @default(MURID)
+  role                 UserRole               @default(USER)
   plan                 UserPlan               @default(FREE)
   emailVerified        DateTime?
   image                String?
   password             String?
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
-  authoredCourses      Course[]              @relation("CourseAuthor")
-  joinedCourses        Course[]              @relation("CourseMembers")
-  authoredArticles     Article[]             @relation("ArticleAuthor")
+  authoredCourses      Course[]               @relation("CourseAuthor")
+  joinedCourses        Course[]               @relation("CourseMembers")
+  authoredArticles     Article[]              @relation("ArticleAuthor")
   accounts             Account[]
   sessions             Session[]
   moduleCompletions    UserModuleCompletion[]
   vocabularyCollections VocabularyCollection[]
+  createdRooms         Room[]                 @relation("RoomCreator")
+  joinedRooms          Room[]                 @relation("RoomParticipants")
   pushSubscription     PushSubscription?
 }
 
-enum UserRoles {
+enum UserRole {
+  USER
   GURU
   MURID
   ADMIN
@@ -66,6 +69,27 @@ model Course {
   authorId        String
   members         User[]       @relation("CourseMembers")
   modules         Module[]     @relation("CourseModules")
+  rooms           Room[]       @relation("CourseRooms")
+}
+
+model Room {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String?
+  isActive          Boolean  @default(true)
+  livekitRoomId     String?  @unique
+  livekitRoomName   String?
+  livekitSessionId  String?
+  startTime         DateTime?
+  endTime           DateTime?
+  maxParticipants   Int?     @default(10)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  creator           User     @relation("RoomCreator", fields: [creatorId], references: [id])
+  creatorId         String
+  course            Course   @relation("CourseRooms", fields: [courseId], references: [id])
+  courseId          Int
+  participants      User[]   @relation("RoomParticipants")
 }
 
 model Module {
@@ -160,6 +184,7 @@ model VocabularyItem {
   id           Int                  @id @default(autoincrement())
   korean       String
   indonesian   String
+  isChecked    Boolean              @default(false)
   collection   VocabularyCollection @relation(fields: [collectionId], references: [id])
   collectionId Int
   createdAt    DateTime             @default(now())

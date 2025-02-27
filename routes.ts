@@ -1,43 +1,33 @@
 /**
- * An array of routes that are accessible to the public
- * These routes do not require authentication
+ * Rute yang dapat diakses oleh pengguna yang tidak masuk log.
  * @type {string[]}
  */
 export const publicRoutes = [
   "/",
-  "/about",
-  "/contact",
-  "/terms",
-  "/privacy",
+  "/community",
+  "/artikel",
+  "/artikel/[id]"
 ];
 
 /**
- * An array of routes that are used for authentication
- * These routes will redirect logged in users to /dashboard
- * @type {string[]}
- */
+* Rute yang dapat diakses oleh pengguna yang masuk log.
+* @type {string[]}
+*/
 export const authRoutes = [
-  "/auth",
+  "/auth/login",
+  "/auth/register",
   "/auth/error",
-  "/auth/reset",
-  "/auth/new-password",
+  "/auth/complete-registration"
 ];
 
 /**
- * The prefix for API authentication routes
- * Routes that start with this prefix are used for API authentication purposes
- * @type {string}
- */
-export const apiAuthPrefix = "/api/auth";
+* Awalan untuk rute yang ada di API.
+* @type {string}
+*/
+export const apiAuthPrefix = "/api"; // Izinkan semua rute API
 
 /**
- * The default redirect path after logging in
- * @type {string}
- */
+* URL pengalihan default ketika pengguna berhasil masuk log.
+* @type {string}
+*/
 export const DEFAULT_REDIRECT_URL = "/";
-
-/**
- * Routes that start with this prefix are used for API purposes
- * @type {string}
- */
-export const apiPrefix = "/api";

@@ -26,12 +26,35 @@ export function PushNotificationManager() {
 
   async function registerServiceWorker() {
     try {
+      const existingRegistration = await navigator.serviceWorker.getRegistration()
+      
+      // If there's an existing registration, unregister it first
+      if (existingRegistration) {
+        await existingRegistration.unregister()
+      }
+      
       const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',
         updateViaCache: 'none',
       })
+
+      // Wait for the service worker to be activated
+      await navigator.serviceWorker.ready
+      
       const sub = await registration.pushManager.getSubscription()
       setSubscription(sub)
+      
+      // Add update handling
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'activated') {
+              console.log('Service Worker updated and activated')
+            }
+          })
+        }
+      })
     } catch (err) {
       console.error('Failed to register service worker:', err)
       setError('Failed to initialize push notifications')

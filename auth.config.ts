@@ -1,74 +1,38 @@
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "@/lib/prisma"
-import Credentials from "next-auth/providers/credentials"
-import { ZodError } from "zod"
-import { signInSchema } from "@/lib/zod"
-import type { NextAuthConfig } from "next-auth"
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import Apple from "next-auth/providers/apple";
+import type { NextAuthConfig } from "next-auth";
+import { LoginSchema } from "./schemas";
+import { getUserByEmail } from "./data/user";
+import bcrypt from "bcryptjs";
 
-export const authConfig = {
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+// Notice this is only an object, not a full Auth.js instance
+export default {
   providers: [
+    Google({
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET!,
+    }),
+    Apple,
     Credentials({
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
       async authorize(credentials) {
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            return null
-          }
+        const validatedFields = LoginSchema.safeParse(credentials);
 
-          const { email, password } = await signInSchema.parseAsync(credentials)
+        if (validatedFields.success) {
+          const { email, password } = validatedFields.data;
+          const user = await getUserByEmail(email);
+          if (!user || !user.password) return null;
+          
+          console.log("Comparing passwords");
+          const passwordMatch = await bcrypt.compare(password, user.password);
+          console.log(`Password match result: ${passwordMatch}`);
 
-          const user = await prisma.user.findUnique({
-            where: {
-              email: email
-            }
-          })
-
-          if (!user || !user.password) {
-            return null
+          if (passwordMatch) {
+            return user;
           }
-
-          // In a real application, you would compare hashed passwords
-          // This is just for demonstration
-          if (password !== user.password) {
-            return null
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.image,
-          }
-        } catch (error) {
-          if (error instanceof ZodError) {
-            return null
-          }
-          throw error
         }
+        return null;
       }
     })
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
-      }
-      return session
-    }
-  },
-  pages: {
-    signIn: "/auth/login",
-    error: "/auth/error",
-  }
 } satisfies NextAuthConfig
