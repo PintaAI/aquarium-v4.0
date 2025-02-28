@@ -3,6 +3,7 @@
 import webpush from 'web-push'
 import { currentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { UserRole } from '@prisma/client'
 
 webpush.setVapidDetails(
   'mailto:admin@pejuangkorea.com',
@@ -70,13 +71,39 @@ export async function unsubscribeUser() {
   }
 }
 
-export async function sendNotification(message: string, userId?: string) {
+interface NotificationPayload {
+  title?: string;
+  body: string;
+  icon?: string;
+  path?: string;
+}
+
+type PushSubscriptionWithEndpoint = {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
+
+export async function sendNotification(
+  payload: NotificationPayload,
+  options?: {
+    userId?: string;
+    roleFilter?: UserRole[];
+  }
+) {
   try {
-    let subscriptions;
+    // Check if current user is admin
+    const currentUserData = await currentUser();
+    if (!currentUserData?.id || currentUserData.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Only admins can send notifications');
+    }
+
+    let subscriptions: PushSubscriptionWithEndpoint[] = [];
+    const { userId } = options || {};
 
     if (userId) {
       // Get subscription for specific user
-      subscriptions = await prisma.pushSubscription.findMany({
+      const subscription = await prisma.pushSubscription.findUnique({
         where: {
           userId: userId,
         },
@@ -86,40 +113,71 @@ export async function sendNotification(message: string, userId?: string) {
           auth: true,
         },
       });
+      if (subscription) {
+        subscriptions = [subscription];
+      } else {
+        throw new Error('User not found or not subscribed to notifications');
+      }
     } else {
       // Get all subscriptions
-      subscriptions = await prisma.pushSubscription.findMany({
+      const results = await prisma.pushSubscription.findMany({
         select: {
           endpoint: true,
           p256dh: true,
           auth: true,
-        },
+        }
       });
+      
+      subscriptions = results;
     }
 
-    // Send notification to subscribed users
-    const results = await Promise.all(
-      subscriptions.map((sub) =>
-        webpush.sendNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: {
-              p256dh: sub.p256dh,
-              auth: sub.auth,
-            },
-          },
-          JSON.stringify({
-            title: 'Pemberitahuan',
-            body: message,
-            icon: '/manifest-icon-192.maskable.png',
-          })
-        )
-      )
-    );
+    if (subscriptions.length === 0) {
+      throw new Error('No subscribed users found');
+    }
 
-    return { success: true, sent: results.length };
+    try {
+      // Send notification to subscribed users
+      const results = await Promise.all(
+        subscriptions.map((sub) =>
+          webpush.sendNotification(
+            {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth,
+              },
+            },
+            JSON.stringify({
+              title: payload.title || 'Pemberitahuan',
+              body: payload.body,
+              icon: payload.icon || '/images/logoo.png',
+              path: payload.path || '/',
+            })
+          )
+        )
+      );
+
+      return { success: true, sent: results.length };
+    } catch (pushError: any) {
+      // If webpush returns a 410 error, it means the subscription is expired/invalid
+      if (pushError.statusCode === 410) {
+        await prisma.pushSubscription.delete({
+          where: {
+            endpoint: subscriptions[0].endpoint
+          }
+        });
+      }
+      throw pushError;
+    }
   } catch (error) {
     console.error('Error sending push notification:', error);
-    return { success: false, error: 'Failed to send notification' };
+    // Check if it's a webpush error response
+    if (error instanceof Error && 'statusCode' in error) {
+      const statusCode = (error as any).statusCode;
+      if (statusCode === 410) {
+        return { success: false, error: 'Subscription expired, please resubscribe' };
+      }
+    }
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to send notification' };
   }
 }

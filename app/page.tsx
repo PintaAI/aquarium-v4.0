@@ -1,12 +1,14 @@
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { PushNotificationManager, InstallPrompt } from "@/components/pwa/notification-manager";
+import { AuthButton } from "@/components/auth/AuthButton";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <div className="p-4 flex justify-between items-center">
         <ThemeToggle />
+        <AuthButton />
       </div>
 
       <div className="max-w-6xl mx-auto px-8 py-4">

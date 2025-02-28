@@ -2,7 +2,7 @@
 
 import { currentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { UserRoles } from "@prisma/client"
+import { UserRole } from "@prisma/client"
 
 export async function makeUserAdmin(email: string) {
   const currentUserData = await currentUser()
@@ -16,14 +16,14 @@ export async function makeUserAdmin(email: string) {
     select: { role: true }
   })
 
-  if (admin?.role !== UserRoles.ADMIN) {
-    throw new Error('Unauthorized: Only admins can perform this action')
+  if (admin?.role !== 'ADMIN' && admin?.role !== 'GURU') {
+    throw new Error('Unauthorized: Only admins and gurus can perform this action')
   }
 
   try {
     const updatedUser = await prisma.user.update({
       where: { email },
-      data: { role: UserRoles.ADMIN }
+      data: { role: 'ADMIN' }
     })
     return { success: true, user: updatedUser }
   } catch (error) {

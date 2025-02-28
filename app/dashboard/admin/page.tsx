@@ -57,8 +57,12 @@ export default function AdminPage() {
     }
   }
 
-  if (!user) {
-    return <div className="p-4">Please log in to access this page.</div>
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'GURU')) {
+    return (
+      <div className="p-4 text-sm text-red-800 rounded-lg bg-red-50">
+        You do not have permission to access this page. Only administrators and gurus are allowed.
+      </div>
+    )
   }
 
   return (

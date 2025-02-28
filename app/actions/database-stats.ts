@@ -1,8 +1,9 @@
 'use server'
 
+import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 
-import { UserRoles, UserPlan, CourseLevel } from '@prisma/client'
+import { UserRole, UserPlan, CourseLevel } from '@prisma/client'
 
 export interface DatabaseStats {
   counts: {
@@ -15,7 +16,7 @@ export interface DatabaseStats {
     vocabularyItems: number
   }
   distribution: {
-    usersByRole: Array<{ role: UserRoles; _count: number }>
+    usersByRole: Array<{ role: UserRole; _count: number }>
     coursesByLevel: Array<{ level: CourseLevel; _count: number }>
     usersByPlan: Array<{ plan: UserPlan; _count: number }>
   }
@@ -31,6 +32,22 @@ export type DatabaseStatsResponse = {
 
 export async function getDatabaseStats(): Promise<DatabaseStatsResponse> {
   try {
+    const session = await auth();
+    
+    if (!session) {
+      return {
+        success: false,
+        error: 'Authentication required'
+      };
+    }
+
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'GURU') {
+      return {
+        success: false,
+        error: 'Admin access required'
+      };
+    }
+
     const [
       userCount,
       courseCount,
